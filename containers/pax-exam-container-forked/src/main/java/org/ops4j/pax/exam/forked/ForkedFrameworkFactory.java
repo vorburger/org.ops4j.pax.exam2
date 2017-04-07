@@ -111,7 +111,7 @@ public class ForkedFrameworkFactory {
         String rmiName = "ExamRemoteFramework-" + UUID.randomUUID().toString();
 
         try {
-            registry = LocateRegistry.createRegistry(port);
+            registry = getRegistry(port);
 
             Map<String, String> systemPropsNew = new HashMap<>(systemProperties);
             systemPropsNew.put(RemoteFramework.RMI_PORT_KEY, Integer.toString(port));
@@ -127,6 +127,22 @@ public class ForkedFrameworkFactory {
             throw new TestContainerException(exc);
         }
     }
+
+    // TODO This utility is copy/pasted in pax-exam-container-rbc-client's
+    // RemoteBundleContextClientImpl, and ideally perhaps should be be put into a
+    // shared utility module
+    private Registry getRegistry(int port) throws RemoteException {
+        Registry reg;
+        String hostName = System.getProperty("java.rmi.server.hostname");
+        if (hostName != null && !hostName.isEmpty()) {
+            reg = LocateRegistry.getRegistry(hostName, port);
+        }
+        else {
+            reg = LocateRegistry.getRegistry(port);
+        }
+        return reg;
+    }
+
 
     /**
      * Forks a Java VM process running an OSGi framework and returns a {@link RemoteFramework}
