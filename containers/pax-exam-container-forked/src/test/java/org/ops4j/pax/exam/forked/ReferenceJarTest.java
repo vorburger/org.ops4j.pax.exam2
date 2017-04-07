@@ -44,6 +44,7 @@ public class ReferenceJarTest {
     @Configuration()
     public Option[] config() {
         return options(mavenBundle("org.ops4j.pax.exam", "regression-pde-bundle", "2.3.0"),
+                //vmOption("-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005"),
             junitBundles());
     }
 

@@ -28,6 +28,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.rmi.RemoteException;
@@ -196,7 +197,7 @@ public class ForkedTestContainer implements TestContainer {
     }
 
     private Map<String, Object> createFrameworkProperties() throws IOException {
-        final Map<String, Object> p = new HashMap<String, Object>();
+        final Map<String, Object> p = new HashMap<>();
         p.put(FRAMEWORK_STORAGE, system.getTempFolder().getAbsolutePath());
         SystemPackageOption[] systemPackageOptions = system.getOptions(SystemPackageOption.class);
         if (systemPackageOptions.length > 0) {
@@ -216,7 +217,7 @@ public class ForkedTestContainer implements TestContainer {
 
     private List<String> createVmArguments() {
         VMOption[] options = system.getOptions(VMOption.class);
-        List<String> args = new ArrayList<String>();
+        List<String> args = new ArrayList<>();
         for (VMOption option : options) {
             args.add(option.getOption());
         }
@@ -225,7 +226,7 @@ public class ForkedTestContainer implements TestContainer {
     }
 
     private Map<String, String> createSystemProperties() {
-        Map<String, String> p = new HashMap<String, String>();
+        Map<String, String> p = new HashMap<>();
         for (PropagateSystemPropertyOption option : system
             .getOptions(PropagateSystemPropertyOption.class)) {
             String key = option.getKey();
@@ -243,6 +244,9 @@ public class ForkedTestContainer implements TestContainer {
         if (repositories.length != 0) {
             System.setProperty("org.ops4j.pax.url.mvn.repositories", buildString(repositories));
         }
+
+        systemProperty("java.rmi.server.hostname").value(InetAddress.getLoopbackAddress().getHostAddress());
+        System.setProperty("java.rmi.server.hostname", InetAddress.getLoopbackAddress().getHostAddress());
 
         return p;
     }
@@ -276,9 +280,9 @@ public class ForkedTestContainer implements TestContainer {
     private void installAndStartBundles() throws BundleException, RemoteException {
         File workDir = new File(system.getTempFolder(), "pax-exam-downloads");
         workDir.mkdirs();
-        List<Long> bundleIds = new ArrayList<Long>();
+        List<Long> bundleIds = new ArrayList<>();
         ProvisionOption<?>[] options = system.getOptions(ProvisionOption.class);
-        Map<String, Long> remoteMappings = new HashMap<String, Long>();
+        Map<String, Long> remoteMappings = new HashMap<>();
         for (ProvisionOption<?> bundle : options) {
             String localUrl = downloadBundle(workDir, bundle.getURL());
             long bundleId = remoteFramework.installBundle(localUrl);

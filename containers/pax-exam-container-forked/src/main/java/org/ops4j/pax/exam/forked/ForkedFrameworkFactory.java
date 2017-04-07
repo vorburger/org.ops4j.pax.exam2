@@ -18,6 +18,7 @@
 package org.ops4j.pax.exam.forked;
 
 import java.io.File;
+import java.net.InetAddress;
 import java.net.URISyntaxException;
 import java.rmi.NoSuchObjectException;
 import java.rmi.NotBoundException;
@@ -111,9 +112,12 @@ public class ForkedFrameworkFactory {
         String rmiName = "ExamRemoteFramework-" + UUID.randomUUID().toString();
 
         try {
-            registry = getRegistry(port);
+            String address = InetAddress.getLoopbackAddress().getHostAddress();
+            System.setProperty("java.rmi.server.hostname", address);
+            registry = LocateRegistry.createRegistry(port);
 
             Map<String, String> systemPropsNew = new HashMap<>(systemProperties);
+            systemPropsNew.put("java.rmi.server.hostname", address);
             systemPropsNew.put(RemoteFramework.RMI_PORT_KEY, Integer.toString(port));
             systemPropsNew.put(RemoteFramework.RMI_NAME_KEY, rmiName);
             String[] vmOptions = buildSystemProperties(vmArgs, systemPropsNew);
@@ -127,22 +131,6 @@ public class ForkedFrameworkFactory {
             throw new TestContainerException(exc);
         }
     }
-
-    // TODO This utility is copy/pasted in pax-exam-container-rbc-client's
-    // RemoteBundleContextClientImpl, and ideally perhaps should be be put into a
-    // shared utility module
-    private Registry getRegistry(int port) throws RemoteException {
-        Registry reg;
-        String hostName = System.getProperty("java.rmi.server.hostname");
-        if (hostName != null && !hostName.isEmpty()) {
-            reg = LocateRegistry.getRegistry(hostName, port);
-        }
-        else {
-            reg = LocateRegistry.getRegistry(port);
-        }
-        return reg;
-    }
-
 
     /**
      * Forks a Java VM process running an OSGi framework and returns a {@link RemoteFramework}
@@ -236,7 +224,8 @@ public class ForkedFrameworkFactory {
 
         do {
             try {
-                Registry reg = LocateRegistry.getRegistry(_port);
+                String address = InetAddress.getLoopbackAddress().getHostAddress();
+                Registry reg = LocateRegistry.getRegistry(address, _port);
                 framework = (RemoteFramework) reg.lookup(rmiName);
             }
             catch (RemoteException e) {
